@@ -3,7 +3,7 @@ USE ETU4084_4322_4088;
 
 CREATE TABLE users(
     id_users INT AUTO_INCREMENT PRIMARY KEY,
-    nom VARCHAR(100),
+    nom VARCHAR(500),
     email VARCHAR(100)
 );
 
