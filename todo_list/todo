@@ -1,0 +1,124 @@
+but:gestion cooperative taxis-motos
+1) base de donnee
+table
+    -(ok)(Ny Aina) creation table motos(id_motos, modele, consommation_litre, pourcentage_entretien)
+    -(ok)(Marino) creation table conducteur(id_conducteur, nom)
+    -(ok)(Ny Aina) creation table trajet(id_trajet, id_affectation, point_depart, point_arrivee, date_heure_debut, date_heure_fin, distance, 
+    montant_recette,pourcentage_salaire,validation)
+insertion donnee
+    -(ok) insertion donnee motos
+    -(ok) insertion donnee conducteur
+    -(ok) insertion donnee trajet
+2) list_course.php
+base
+Flight
+    ***route
+        -(ok)(Marino) creer un route list course
+    ***modele
+        -(ok) (Marino) fonction getListCourse()
+    ***controleur
+        -(ok) (Marino) appel fonction getListCourse() et fait un 
+        redirection vers le view list_course
+    ***views
+        -(ok) (Ny Aina) creation tableau pour lister les courses(date_heure_debut,date_heure_fin, 
+        montant_recette, depense(montant,type depense),benefice, action(button valider pour valider la course
+        et button modifier si la course n'est pas valider))
+        -(ok) (Ny Aina) button creer un nouveau course 
+    
+3) creation_course.php
+base
+    -(ok)insert nouveau course dans la table trajet 
+Flight
+    ***route
+        -(ok)creer un route creation course
+    ***modele
+        -(ok)fonction insertNewCourse()
+    ***controleur
+        -(ok)get valeur dans le formulaire de creation d'une course
+        -(ok)appel fonction insertNewCourse() et fait un 
+        redirection vers le view list_course 
+    ***views
+        -(ok)creation formulaire new course(point_depart, point_arrivee,date_heure_debut,
+        date_heure_fin, distance, montant_recette, pourcentage_salaire)
+        -(ok)button creer la course
+4) modifier.php
+base
+    -(ok)update trajet 
+Flight
+    ***route
+        -(ok)creer un route modifier course
+    ***modele
+        -(ok)fonction modifierCourse()
+    ***controleur
+        -(ok)get valeur dans le formulaire modifier course
+        -(ok)appel fonction  modifierCourse() pour l'update et fait un 
+        redirection vers le view list_course s'il est modifier
+    ***views
+        -(ok)creation formulaire new course(point_depart, point_arrivee,date_heure_debut,
+        date_heure_fin, distance, montant_recette, pourcentage_salaire)
+        -(ok)button modifier
+5) valider course
+base
+    -(ok)update colonne valide course dans la table trajet 
+Flight
+    ***route
+        -(ok)creer un route valider course
+    ***modele
+        -(ok)fonction validerCourse()
+    ***controleur
+        -(ok)get id_trajet pour valider la course
+        -(ok)appel fonction  validerCourse() et fait un 
+        redirection vers le view list_course 
+    ***views
+        -(ok)button valider
+6) base donnee
+table 
+    -(ok)motos
+    -(ok)conducteur
+insertion donnee
+    -(ok)insertion 10 motos dans la table motos
+    -(ok)insertion 6 chauffeurs dans la table conducteur 
+7) modifier prix d'essence
+base
+    -table parametre(id_parametre, prix_essence)
+Flight
+    ***route
+        -(ok)creer un route modifier prix essence
+    ***modele
+        -(ok)fonction getPrix dans la base
+        -(ok)fonction modifierPrixEssence()
+    ***controleur
+        -(ok)appel fonction  modifierPrixEssence() et fait un 
+        redirection vers le view list_course 
+    ***views
+        -(ok)input modifier prix d'essence  pre-complete
+        -(ok)button modifier
+8) efface toute les courses
+base
+    -(ok)creer un table mot de passe
+Flight
+    ***route
+        -(ok)creer un route supprimer les courses
+    ***modele
+        -(ok)fonction verifierPassword()
+        -(ok)fonction supprCourse()
+    ***controleur
+        -(ok)appel fonction  verifierPassword() et supprCourse() fait un 
+        redirection vers le view list_course 
+    ***views
+        -(ok)input pour entrer le mot de passe
+        -(ok)button effacer toutes les courses
+9) filtre date debut et date fin 
+ base
+    -(ok)creer un table mot de passe
+Flight
+    ***route
+        -(ok)creer un route filtre date debut et date fin 
+    ***modele
+        -(ok)fonction filtreDate()
+    ***controleur
+        -(ok)appel fonction  filtreDate() fait un 
+        redirection vers le view list_course 
+    ***views
+        -(ok)input pour entrer date debut et date fin
+        -(ok)button filtrer
