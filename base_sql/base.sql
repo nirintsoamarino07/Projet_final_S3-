@@ -1,75 +1,103 @@
-CREATE DATABASE ETU4088_ETU4322;
-USE ETU4088_ETU4322;
+CREATE DATABASE ETU4084_4322_4088;
+USE ETU4084_4322_4088;
 
-CREATE TABLE motos (
-    id_moto INT AUTO_INCREMENT PRIMARY KEY,
-    modele VARCHAR(100) NOT NULL,
-    consommation_litre_100km DECIMAL(5,2) NOT NULL,
-    pourcentage_entretien DECIMAL(5,2) NOT NULL
+CREATE TABLE region (
+    id_region INT AUTO_INCREMENT PRIMARY KEY,
+    nom_region VARCHAR(100) NOT NULL
 );
 
-CREATE TABLE conducteur (
-    id_conducteur INT AUTO_INCREMENT PRIMARY KEY,
-    nom VARCHAR(100) NOT NULL,
-    pourcentage_salaire DECIMAL(5,2) NOT NULL
-);
-CREATE TABLE trajet (
-    id_trajet INT AUTO_INCREMENT PRIMARY KEY,
-    id_conducteur INT NOT NULL,
-    id_moto INT NOT NULL,
-    point_depart VARCHAR(100),
-    point_arrivee VARCHAR(100),
-    date_heure_debut DATETIME NOT NULL,
-    date_heure_fin DATETIME NOT NULL,
-    distance_km DECIMAL(6,2) NOT NULL,
-    montant_paye DECIMAL(10,2) NOT NULL,
-    valide BOOLEAN DEFAULT FALSE,
-    FOREIGN KEY (id_conducteur) REFERENCES conducteur(id_conducteur),
-    FOREIGN KEY (id_moto) REFERENCES motos(id_moto)
-); 
-
-CREATE TABLE parametre(
-    id_parametre INT AUTO_INCREMENT PRIMARY KEY,
-    prix_essence DECIMAL(10,2)
+CREATE TABLE ville (
+    id_ville INT AUTO_INCREMENT PRIMARY KEY,
+    nom_ville VARCHAR(100) NOT NULL,
+    id_region INT,
+    FOREIGN KEY (id_region) REFERENCES region(id_region)
 );
 
-CREATE TABLE mot_de_passe(
-    mdp VARCHAR(10)
+CREATE TABLE type_besoin (
+    id_type INT AUTO_INCREMENT PRIMARY KEY,
+    nom_type VARCHAR(50) NOT NULL
 );
 
-INSERT INTO motos (modele, consommation_litre_100km, pourcentage_entretien) VALUES
-('TVS HLX', 2.0, 10),
-('Bajaj Boxer', 2.0, 10),
-('G6', 2.0, 10),
-('Racing', 2.0, 10), 
-('Honda', 1.6, 15),
-('G5', 1.6, 15), 
-('Milango', 1.3, 11.5),
-('Royal', 1.3, 11.5),
-('Hartford', 1.3, 11.5),
-('Yamaha', 1.3, 11.5);
+CREATE TABLE article (
+    id_article INT AUTO_INCREMENT PRIMARY KEY,
+    nom_article VARCHAR(100) NOT NULL,
+    unite VARCHAR(50),
+    id_type INT,
+    FOREIGN KEY (id_type) REFERENCES type_besoin(id_type)
+);
 
-INSERT INTO conducteur (nom, pourcentage_salaire) VALUES
-('Rakoto', 15),
-('Marino', 15),
-('Josh', 25),
-('Nomena', 25), 
-('Manoela', 19.5),
-('Kevin', 19.5);
+CREATE TABLE besoin (
+    id_besoin INT AUTO_INCREMENT PRIMARY KEY,
+    id_ville INT,
+    id_article INT,
+    quantite DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (id_ville) REFERENCES ville(id_ville),
+    FOREIGN KEY (id_article) REFERENCES article(id_article)
+);
 
-INSERT INTO trajet (
-    id_conducteur, id_moto,
-    point_depart, point_arrivee,
-    date_heure_debut, date_heure_fin,
-    distance_km, montant_paye, valide
-) VALUES
-(1, 1, 'Analakely', 'Ankorondrano',
- '2025-12-01 08:00', '2025-12-01 08:30',
- 5, 10000, TRUE),
+CREATE TABLE don (
+    id_don INT AUTO_INCREMENT PRIMARY KEY,
+    id_article INT,
+    quantite DECIMAL(10,2) NOT NULL,
+    date_don DATE,
+    FOREIGN KEY (id_article) REFERENCES article(id_article)
+);
 
-(2, 2, 'Ambohijatovo', 'Itaosy',
- '2025-12-01 09:00', '2025-12-01 09:45',
- 8, 15000, TRUE); 
 
- INSERT INTO parametre (prix_essence)VALUES(5000);
- INSERT INTO mot_de_passe (mdp)VALUES('1234');
+CREATE TABLE stock (
+    id_stock INT AUTO_INCREMENT PRIMARY KEY,
+    id_article INT UNIQUE,
+    quantite_stock DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (id_article) REFERENCES article(id_article)
+);
+
+CREATE TABLE distribution (
+    id_distribution INT AUTO_INCREMENT PRIMARY KEY,
+    id_besoin INT,
+    quantite_donnee DECIMAL(10,2) NOT NULL,
+    date_distribution DATE,
+    FOREIGN KEY (id_besoin) REFERENCES besoin(id_besoin)
+);
+
+-- REGION
+INSERT INTO region (nom_region) VALUES
+('Analamanga'),
+('Atsinanana');
+
+-- VILLE
+INSERT INTO ville (nom_ville, id_region) VALUES
+('Antananarivo', 1),
+('Toamasina', 2);
+
+-- TYPE BESOIN
+INSERT INTO type_besoin (nom_type) VALUES
+('Nature'),
+('Materiaux'),
+('Argent');
+
+-- ARTICLE
+INSERT INTO article (nom_article, unite, id_type) VALUES
+('Riz', 'kg', 1),
+('Huile', 'L', 1),
+('Tole', 'piece', 2),
+('Clou', 'kg', 2),
+('Argent', 'Ar', 3);
+
+-- BESOIN
+INSERT INTO besoin (id_ville, id_article, quantite) VALUES
+(1, 1, 100),      
+(1, 5, 500000),    
+(2, 1, 200),     
+(2, 3, 50);  
+
+-- DON (historique)
+INSERT INTO don (id_article, quantite, date_don) VALUES
+(1, 300, '2026-02-15'),
+(5, 1000000, '2026-02-15'),
+(3, 80, '2026-02-15');
+
+-- STOCK (quantité actuelle disponible)
+INSERT INTO stock (id_article, quantite_stock) VALUES
+(1, 300),
+(5, 1000000),
+(3, 80);
