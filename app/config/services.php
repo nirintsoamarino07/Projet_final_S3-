@@ -81,7 +81,6 @@ if (Debugger::$showBar === true && php_sapi_name() !== 'cli') {
 
 // MySQL Example:
 $dsn = 'mysql:host=' . $config['database']['host'] . ';dbname=' . $config['database']['dbname'] . ';charset=utf8mb4';
-// $dsn = 'pgsql:host=' . $config['database']['host'] . ';port=' . $config['database']['port'] . ';dbname=' . $config['database']['dbname'];
 
 // SQLite Example:
 // $dsn = 'sqlite:' . $config['database']['file_path'];
@@ -92,7 +91,7 @@ $pdoClass = Debugger::$showBar === true ? PdoQueryCapture::class : PdoWrapper::c
 $app->register('db', $pdoClass, [ $dsn, $config['database']['user'] ?? null, $config['database']['password'] ?? null ]);
 
 /**********************************************
- *         Third-Party $dIntegrations           *
+ *         Third-Party Integrations           *
  **********************************************/
 // Google OAuth Example:
 // $app->register('google_oauth', Google_Client::class, [ $config['google_oauth'] ]);

@@ -66,15 +66,13 @@ return [
 	 *         Database Settings          *
 	 **************************************/
 	'database' => [
-		// MySQL Example:
 		'host'     => '127.0.0.1',      // Database host (e.g., 'localhost', 'db.example.com')
 		'port'		=>'3306',
-		'dbname'   => 'ETU4088_ETU4322',   // Database name (e.g., 'flightphp')
+		'dbname'   => 'ETU4084_4322_4088',   // Database name (e.g., 'flightphp')
 		'user'     => 'root',  // Database user (e.g., 'root')
 		'password' => '',  // Database password (never commit real passwords)
 
-		// SQLite ExLIMIT 1ample:
-		// 'file_path' => __DIR__ . $ds . '..' . $ds . 'database.sqlite', // Path to SQLite file
+		'file_path' => __DIR__ . $ds . '..' . $ds . 'database.sqlite', // Path to SQLite file
 	],
 
 	// Google OAuth Credentials

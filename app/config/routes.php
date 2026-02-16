@@ -1,6 +1,10 @@
 <?php
 
 use app\controllers\ApiExampleController;
+use app\controllers\BesoinController;
+use app\controllers\DonController;
+use app\controllers\AttributionController;
+use app\controllers\DashboardController;
 use app\middlewares\SecurityHeadersMiddleware;
 use flight\Engine;
 use flight\net\Router;
@@ -13,31 +17,43 @@ use flight\net\Router;
 // This wraps all routes in the group with the SecurityHeadersMiddleware
 $router->group('', function(Router $router) use ($app) {
 
-	// $router->get('/', function() use ($app) {
-	// 	$app->render('welcome', [ 'message' => 'You are gonna do great things!']);
-	// });
+	$router->get('/', [ DashboardController::class, 'index' ]);
 
-	// $router->get('/elias', function() use ($app) {
-	// 	$app->render('welcome', [ 'message' => 'You are gonna do great thsdfsdfsdf!']);
-	// });
+	$router->get('/hello-world/a/@name', function($name) {
+		echo '<h1>Hello world! Oh hey '.$name.'!</h1>';
+	});
 
-	// $router->get('/hello-world/a/@name', function($name) {
-	// 	echo '<h1>Hello world! Oh hey '.$name.'!</h1>';
-	// });
+	$router->group('/besoins', function() use ($router) {
+		$router->get('', [ BesoinController::class, 'index' ]);
+		$router->get('/', [ BesoinController::class, 'index' ]);
+		$router->get('/saisir', [ BesoinController::class, 'createForm' ]);
+		$router->post('/saisir', [ BesoinController::class, 'createSubmit' ]);
+		$router->post('/villes', [ BesoinController::class, 'createVille' ]);
+	});
+
+	$router->group('/dons', function() use ($router) {
+		$router->get('', [ DonController::class, 'index' ]);
+		$router->get('/', [ DonController::class, 'index' ]);
+		$router->get('/saisir', [ DonController::class, 'createForm' ]);
+		$router->post('/saisir', [ DonController::class, 'createSubmit' ]);
+	});
+
+	$router->group('/attributions', function() use ($router) {
+		$router->get('', [ AttributionController::class, 'index' ]);
+		$router->get('/', [ AttributionController::class, 'index' ]);
+		$router->get('/besoin/@id:[0-9]+/dons', [ AttributionController::class, 'besoinDons' ]);
+		$router->post('', [ AttributionController::class, 'createSubmit' ]);
+		$router->post('/', [ AttributionController::class, 'createSubmit' ]);
+	});
+
+	$router->group('/api', function() use ($router) {
+		$router->get('/users', [ ApiExampleController::class, 'getUsers' ]);
+		$router->get('/users/@id:[0-9]', [ ApiExampleController::class, 'getUser' ]);
+		$router->post('/users/@id:[0-9]', [ ApiExampleController::class, 'updateUser' ]);
+	});
+
+	$router->group('/dashboard', function() use ($router) {
+		$router->get('/besoin/@id:[0-9]+/attributions', [ DashboardController::class, 'attributions' ]);
+	});
 	
-	$router->group('/taximotos', function() use ($router) {
-    $router->get('/total', [ ApiExampleController::class, 'total' ]);
-    $router->get('/listCourse', [ ApiExampleController::class, 'getListCourse' ]);
-    $router->get('/creation_course', [ ApiExampleController::class, 'creationCourse' ]);
-    $router->post('/creation_course', [ ApiExampleController::class, 'creationCoursePOST' ]);
-    $router->get('/modifier_course', [ ApiExampleController::class, 'modifierCourse' ]);
-    $router->post('/modifier_course', [ ApiExampleController::class, 'modifierCoursePOST' ]);
- 	$router->post('/valider_course', [ ApiExampleController::class, 'validerCoursePOST' ]);
- 	$router->get('/Modife_prix_essence', [ ApiExampleController::class, 'ModifePrix' ]);
- 	$router->post('/Modife_prix_essence', [ ApiExampleController::class, 'ModifePrixPOST' ]);
- 	$router->post('/supprimer_courses', [ ApiExampleController::class, 'supprCourses' ]);
- 	$router->post('/filtre_date', [ ApiExampleController::class, 'filtrerDate' ]);
-
-});
- 
-}, [ SecurityHeadersMiddleware::class ]);  
+}, [ SecurityHeadersMiddleware::class ]);

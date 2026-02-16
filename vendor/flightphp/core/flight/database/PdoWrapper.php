@@ -29,7 +29,8 @@ class PdoWrapper extends PDO
      * @param array<string, mixed>|null $options An array of options for the PDO connection.
      * @param bool $trackApmQueries Whether to track application performance metrics (APM) for queries.
      */
-    public function __construct(?string $dsn = null, ?string $username = '', ?string $password = '', ?array $options = null, bool $trackApmQueries = false){
+    public function __construct(?string $dsn = null, ?string $username = '', ?string $password = '', ?array $options = null, bool $trackApmQueries = false)
+    {
         parent::__construct($dsn, $username, $password, $options);
         $this->trackApmQueries = $trackApmQueries;
         if ($this->trackApmQueries === true) {

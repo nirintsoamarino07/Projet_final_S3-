@@ -1,0 +1,9 @@
+    Saisie des besoins par ville (pas d'identification individuelle des sinistrés)
+
+    Saisie des dons
+
+    Page d'attribution : donner des dons saisis pour un besoin spécifique
+
+    Tableau de bord : liste des villes avec besoins et dons attribués
+
+    Règle de gestion : erreur si quantité donnée > dons disponibles
