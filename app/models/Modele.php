@@ -22,4 +22,13 @@ class Modele {
         return 5000; 
     }
 
+    public function Cousin(): float {
+        $sql = "SELECT prix_essence FROM parametre LIMIT 1";
+        $stmt = $this->db->query($sql);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        if($result && isset($result['prix_essence'])){
+            return floatval($result['prix_essence']);
+        }
+        return 5000; 
+    }
 }
