@@ -45,7 +45,7 @@ $cspNonce = (string) \Flight::app()->get('csp_nonce');
 
   <footer id="footer" class="footer">
     <div class="copyright">
-      ETU004084  ETU004084  ETU004084
+      ETU004084  ETU004088  ETU004322
       <br>
       <strong>Lien github : </strong><a href="https://github.com/nirintsoamarino07/Projet_final_S3-" target="_blank" rel="noopener noreferrer">https://github.com/nirintsoamarino07/Projet_final_S3-</a>
     </div>
