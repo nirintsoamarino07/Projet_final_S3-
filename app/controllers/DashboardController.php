@@ -44,6 +44,7 @@ class DashboardController
 
         $besoins = $this->dashboardModel->listBesoinsWithCoverage($filters);
         $stats = $this->dashboardModel->getStats($filters);
+        $achatsParVille = $this->dashboardModel->getAchatMontantsParVille($filters);
 
         $regions = $this->regionModel->getAll();
         $villes = $this->villeModel->getAll();
@@ -60,6 +61,7 @@ class DashboardController
             'types' => $types,
             'evenements' => $evenements,
             'stats' => $stats,
+            'achatsParVille' => $achatsParVille,
             'besoins' => $besoins,
         ], 'content');
 

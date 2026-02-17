@@ -144,6 +144,37 @@
 
   <div class="card">
     <div class="card-body">
+      <h5 class="card-title">Montants d'achat par ville</h5>
+
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Ville</th>
+              <th class="text-end">Montant (Ar)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php if (empty($achatsParVille)) { ?>
+              <tr>
+                <td colspan="2" class="text-muted">Aucun achat trouvé pour ces filtres.</td>
+              </tr>
+            <?php } else { ?>
+              <?php foreach ($achatsParVille as $row) { ?>
+                <tr>
+                  <td><?= $row->nom_ville ?></td>
+                  <td class="text-end"><?= number_format((float) ($row->montant_achat ?? 0), 2, ',', ' ') ?></td>
+                </tr>
+              <?php } ?>
+            <?php } ?>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
       <h5 class="card-title">Besoins non couverts / partiels</h5>
 
       <div class="table-responsive">

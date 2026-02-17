@@ -5,6 +5,7 @@ use app\controllers\BesoinController;
 use app\controllers\DonController;
 use app\controllers\AttributionController;
 use app\controllers\DashboardController;
+use app\controllers\PrixUnitaireController;
 use app\middlewares\SecurityHeadersMiddleware;
 use flight\Engine;
 use flight\net\Router;
@@ -14,8 +15,8 @@ use flight\net\Router;
  * @var Engine $app
  */
 
-// This wraps all routes in the group with the SecurityHeadersMiddleware
-$router->group('', function(Router $router) use ($app) {
+
+$router->group('', function(Router $router) use ($app) { 
 
 	$router->get('/', [ DashboardController::class, 'index' ]);
 
@@ -29,13 +30,22 @@ $router->group('', function(Router $router) use ($app) {
 		$router->get('/saisir', [ BesoinController::class, 'createForm' ]);
 		$router->post('/saisir', [ BesoinController::class, 'createSubmit' ]);
 		$router->post('/villes', [ BesoinController::class, 'createVille' ]);
-	});
-
+	});  
 	$router->group('/dons', function() use ($router) {
 		$router->get('', [ DonController::class, 'index' ]);
 		$router->get('/', [ DonController::class, 'index' ]);
 		$router->get('/saisir', [ DonController::class, 'createForm' ]);
 		$router->post('/saisir', [ DonController::class, 'createSubmit' ]);
+	});
+
+	$router->group('/prix-unitaires', function() use ($router) {
+		$router->get('', [ PrixUnitaireController::class, 'index' ]);
+		$router->get('/', [ PrixUnitaireController::class, 'index' ]);
+		$router->get('/saisir', [ PrixUnitaireController::class, 'createForm' ]);
+		$router->post('/saisir', [ PrixUnitaireController::class, 'createSubmit' ]);
+		$router->get('/@id:[0-9]+/edit', [ PrixUnitaireController::class, 'editForm' ]);
+		$router->post('/@id:[0-9]+/edit', [ PrixUnitaireController::class, 'editSubmit' ]);
+		$router->post('/@id:[0-9]+/delete', [ PrixUnitaireController::class, 'deleteSubmit' ]);
 	});
 
 	$router->group('/attributions', function() use ($router) {

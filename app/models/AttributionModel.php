@@ -105,6 +105,44 @@ class AttributionModel
         );
     }
 
+    /**
+     * @return array<int, mixed>
+     */
+    public function listDonsArgentDisponibles(): array
+    {
+        return $this->app->db()->fetchAll(
+            'SELECT
+                d.id_don,
+                d.id_article,
+                d.quantite_totale,
+                d.quantite_distribuee,
+                (d.quantite_totale - d.quantite_distribuee) AS montant_disponible,
+                d.date_reception,
+                d.donateur,
+                d.source
+             FROM don d
+             JOIN article a ON a.id_article = d.id_article
+             JOIN type_besoin t ON t.id_type = a.id_type
+             WHERE t.nom_type = "Argent"
+               AND (d.quantite_totale - d.quantite_distribuee) > 0
+             ORDER BY d.date_reception ASC, d.id_don ASC'
+        );
+    }
+
+    public function getPrixUnitaireByArticle(int $idArticle): ?float
+    {
+        $row = $this->app->db()->fetchRow(
+            'SELECT prix FROM prix_unitaire WHERE id_article = ?',
+            [ $idArticle ]
+        );
+
+        if (empty($row)) {
+            return null;
+        }
+
+        return isset($row->prix) ? (float) $row->prix : null;
+    }
+
     public function createAttributionFifo(int $idBesoin, float $quantite): void
     {
         if ($quantite <= 0) {
@@ -173,6 +211,109 @@ class AttributionModel
             if ($reste > 0) {
                 throw new Exception('Stock insuffisant pour compléter l\'attribution.');
             }
+
+            $db->commit();
+        } catch (Exception $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    public function createAttributionFromArgentFifo(int $idBesoin, float $quantite): void
+    {
+        if ($quantite <= 0) {
+            throw new Exception('Quantité invalide.');
+        }
+
+        $db = $this->app->db();
+
+        try {
+            $db->beginTransaction();
+
+            $besoin = $this->getBesoinDetails($idBesoin);
+            if ($besoin['quantite_restante'] <= 0) {
+                throw new Exception('Ce besoin est déjà couvert.');
+            }
+            if ($quantite > $besoin['quantite_restante']) {
+                throw new Exception('La quantité dépasse le reste à couvrir pour ce besoin.');
+            }
+
+            $prixUnitaire = $this->getPrixUnitaireByArticle((int) $besoin['id_article']);
+            if ($prixUnitaire === null || $prixUnitaire <= 0) {
+                throw new Exception('Prix unitaire introuvable pour cet article.');
+            }
+
+            $montantRequis = $quantite * $prixUnitaire;
+            if ($montantRequis <= 0) {
+                throw new Exception('Montant requis invalide.');
+            }
+
+            $donsArgent = $db->fetchAll(
+                'SELECT d.id_don, d.quantite_totale, d.quantite_distribuee
+                 FROM don d
+                 JOIN article a ON a.id_article = d.id_article
+                 JOIN type_besoin t ON t.id_type = a.id_type
+                 WHERE t.nom_type = "Argent"
+                   AND (d.quantite_totale - d.quantite_distribuee) > 0
+                 ORDER BY d.date_reception ASC, d.id_don ASC
+                 FOR UPDATE'
+            );
+
+            $totalArgentDisponible = 0.0;
+            foreach ($donsArgent as $d) {
+                $totalArgentDisponible += (float) $d->quantite_totale - (float) $d->quantite_distribuee;
+            }
+
+            if ($montantRequis > $totalArgentDisponible) {
+                throw new Exception('Montant insuffisant dans les dons en argent.');
+            }
+
+            $resteMontant = $montantRequis;
+            foreach ($donsArgent as $donArgent) {
+                if ($resteMontant <= 0) {
+                    break;
+                }
+
+                $dispo = (float) $donArgent->quantite_totale - (float) $donArgent->quantite_distribuee;
+                if ($dispo <= 0) {
+                    continue;
+                }
+
+                $montantUtilise = $resteMontant <= $dispo ? $resteMontant : $dispo;
+                $qteObtenue = $montantUtilise / $prixUnitaire;
+
+                $db->runQuery(
+                    'INSERT INTO conversion_argent (id_don_argent, id_article_cible, montant_utilise, prix_unitaire, quantite_obtenue)
+                     VALUES (?, ?, ?, ?, ?)',
+                    [ (int) $donArgent->id_don, (int) $besoin['id_article'], (float) $montantUtilise, (float) $prixUnitaire, (float) $qteObtenue ]
+                );
+
+                $db->runQuery(
+                    'UPDATE don SET quantite_distribuee = quantite_distribuee + ? WHERE id_don = ?',
+                    [ (float) $montantUtilise, (int) $donArgent->id_don ]
+                );
+
+                $resteMontant -= $montantUtilise;
+            }
+
+            if ($resteMontant > 0) {
+                throw new Exception('Montant insuffisant pour compléter la conversion.');
+            }
+
+            $db->runQuery(
+                'INSERT INTO don (id_article, quantite_totale, quantite_distribuee, donateur, source, observations)
+                 VALUES (?, ?, ?, ?, ?, ?)',
+                [ (int) $besoin['id_article'], (float) $quantite, (float) $quantite, null, 'Conversion argent', 'Conversion automatique depuis don(s) en argent' ]
+            );
+            $idDonConverti = (int) $db->lastInsertId();
+
+            $db->runQuery(
+                'INSERT INTO attribution (id_besoin, id_don, quantite_attribuee, observations)
+                 VALUES (?, ?, ?, ?)',
+                [ $idBesoin, $idDonConverti, (float) $quantite, 'Attribution via conversion argent' ]
+            );
 
             $db->commit();
         } catch (Exception $e) {

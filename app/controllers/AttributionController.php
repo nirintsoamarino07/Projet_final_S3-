@@ -39,6 +39,14 @@ class AttributionController
             $besoin = $this->attributionModel->getBesoinDetails($idBesoin);
             $dons = $this->attributionModel->listDonsDisponiblesByArticle((int) $besoin['id_article']);
 
+            $prixUnitaire = $this->attributionModel->getPrixUnitaireByArticle((int) $besoin['id_article']);
+            $donsArgent = $this->attributionModel->listDonsArgentDisponibles();
+
+            $totalArgentDisponible = 0.0;
+            foreach ($donsArgent as $da) {
+                $totalArgentDisponible += (float) $da->montant_disponible;
+            }
+
             $totalDisponible = 0.0;
             foreach ($dons as $d) {
                 $totalDisponible += (float) $d->quantite_disponible;
@@ -48,6 +56,8 @@ class AttributionController
                 'success' => true,
                 'besoin' => $besoin,
                 'total_disponible' => (float) $totalDisponible,
+                'prix_unitaire' => $prixUnitaire !== null ? (float) $prixUnitaire : null,
+                'total_argent_disponible' => (float) $totalArgentDisponible,
                 'dons' => array_map(function($d) {
                     return [
                         'id_don' => (int) $d->id_don,
@@ -71,6 +81,7 @@ class AttributionController
     public function createSubmit(): void
     {
         $idBesoin = (int) ($this->app->request()->data->id_besoin ?? 0);
+        $mode = (string) ($this->app->request()->data->mode ?? 'stock');
         $quantiteRaw = $this->app->request()->data->quantite_attribuee ?? null;
         $quantite = is_numeric($quantiteRaw) ? (float) $quantiteRaw : 0.0;
 
@@ -82,7 +93,11 @@ class AttributionController
                 throw new Exception('La quantité attribuée doit être supérieure à 0.');
             }
 
-            $this->attributionModel->createAttributionFifo($idBesoin, $quantite);
+            if ($mode === 'argent') {
+                $this->attributionModel->createAttributionFromArgentFifo($idBesoin, $quantite);
+            } else {
+                $this->attributionModel->createAttributionFifo($idBesoin, $quantite);
+            }
 
             $this->app->json([ 'success' => true ]);
         } catch (Exception $e) {

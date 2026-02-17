@@ -154,6 +154,56 @@ class DashboardModel
     }
 
     /**
+     * @param array<string, int|string|null> $filters
+     * @return array<int, mixed>
+     */
+    public function getAchatMontantsParVille(array $filters): array
+    {
+        $where = [
+            'd.source = "Conversion argent"',
+        ];
+        $params = [];
+
+        if (!empty($filters['id_region'])) {
+            $where[] = 'r.id_region = ?';
+            $params[] = (int) $filters['id_region'];
+        }
+        if (!empty($filters['id_ville'])) {
+            $where[] = 'v.id_ville = ?';
+            $params[] = (int) $filters['id_ville'];
+        }
+        if (!empty($filters['id_type'])) {
+            $where[] = 't.id_type = ?';
+            $params[] = (int) $filters['id_type'];
+        }
+        if (!empty($filters['id_evenement'])) {
+            $where[] = 'b.id_evenement = ?';
+            $params[] = (int) $filters['id_evenement'];
+        }
+
+        $whereSql = $where !== [] ? ('WHERE ' . implode(' AND ', $where)) : '';
+
+        return $this->app->db()->fetchAll(
+            'SELECT
+                v.id_ville,
+                v.nom_ville,
+                COALESCE(SUM(at.quantite_attribuee * pu.prix), 0) AS montant_achat
+             FROM attribution at
+             JOIN don d ON d.id_don = at.id_don
+             JOIN besoin b ON b.id_besoin = at.id_besoin
+             JOIN ville v ON v.id_ville = b.id_ville
+             JOIN region r ON r.id_region = v.id_region
+             JOIN article a ON a.id_article = b.id_article
+             JOIN type_besoin t ON t.id_type = a.id_type
+             JOIN prix_unitaire pu ON pu.id_article = b.id_article
+             ' . $whereSql . '
+             GROUP BY v.id_ville, v.nom_ville
+             ORDER BY montant_achat DESC, v.nom_ville ASC',
+            $params
+        );
+    }
+
+    /**
      * @return array<int, mixed>
      */
     public function listAttributionsByBesoin(int $idBesoin): array

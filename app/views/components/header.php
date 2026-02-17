@@ -2,8 +2,8 @@
 
   <div class="d-flex align-items-center justify-content-between">
     <a href="<?= isset($homeUrl) ? $homeUrl : '/' ?>" class="logo d-flex align-items-center">
-      <img src="<?= isset($assetBase) ? $assetBase : '' ?>/img/logo.png" alt="">
-      <span class="d-none d-lg-block">S3Final</span>
+      <img src="<?= isset($assetBase) ? $assetBase : '' ?>/img/Ministr.png" alt="" style="max-height: 44px;">
+      <span class="d-none d-lg-block fw-bold fs-5">BNGRC MADAGASCAR</span>
     </a>
     <i class="bi bi-list toggle-sidebar-btn"></i>
   </div>

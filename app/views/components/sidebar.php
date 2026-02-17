@@ -45,6 +45,24 @@
     </li>
 
     <li class="nav-item">
+      <a class="nav-link collapsed" data-bs-target="#prix-unitaires-nav" data-bs-toggle="collapse" href="#" role="button" aria-expanded="false" aria-controls="prix-unitaires-nav">
+        <i class="bi bi-cash-coin"></i><span>Prix unitaire</span><i class="bi bi-chevron-down ms-auto"></i>
+      </a>
+      <ul id="prix-unitaires-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+        <li>
+          <a href="<?= (isset($homeUrl) ? rtrim($homeUrl, '/') : '') ?>/prix-unitaires">
+            <i class="bi bi-circle"></i><span>Liste</span>
+          </a>
+        </li>
+        <li>
+          <a href="<?= (isset($homeUrl) ? rtrim($homeUrl, '/') : '') ?>/prix-unitaires/saisir">
+            <i class="bi bi-circle"></i><span>Saisir</span>
+          </a>
+        </li>
+      </ul>
+    </li>
+
+    <li class="nav-item">
       <a class="nav-link" href="<?= (isset($homeUrl) ? rtrim($homeUrl, '/') : '') ?>/attributions">
         <i class="bi bi-arrow-left-right"></i>
         <span>Attribution</span>
