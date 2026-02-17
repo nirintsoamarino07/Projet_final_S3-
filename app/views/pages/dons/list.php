@@ -49,7 +49,7 @@
                       <td><?= !empty($d->source) ? $d->source : '-' ?></td>
                       <td><?= $d->date_reception ?></td>
                       <td>
-                        <?php if (isset($d->nom_type) && (string) $d->nom_type !== 'Argent') { ?>
+                        <?php if (!empty($d->nom_type) && strtolower(trim((string)$d->nom_type)) !== 'argent') { ?>
                           <div class="d-flex gap-2 align-items-center">
                             <input type="number" step="0.01" min="0.01" class="form-control form-control-sm don-vendre-qte" style="max-width:120px;" placeholder="Qte" data-id-don="<?= $d->id_don ?>">
                             <input type="number" step="0.01" min="0" max="99.99" class="form-control form-control-sm don-vendre-red" style="max-width:110px;" value="10" data-id-don="<?= $d->id_don ?>">

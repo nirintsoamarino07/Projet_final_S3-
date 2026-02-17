@@ -1,25 +1,15 @@
-
-
 CREATE DATABASE IF NOT EXISTS ETU4084_4322_4088
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 
 USE ETU4084_4322_4088;
 
--- ============================================================
--- 1. TABLE : unite
---    Unités de mesure des articles (kg, litre, tôle, Ar, ...)
--- ============================================================
 CREATE TABLE unite (
     id_unite   INT AUTO_INCREMENT PRIMARY KEY,
-    libelle    VARCHAR(50)  NOT NULL,   -- ex: "Kilogramme"
-    symbole    VARCHAR(10)  NOT NULL    -- ex: "kg"
+    libelle    VARCHAR(50)  NOT NULL,
+    symbole    VARCHAR(10)  NOT NULL
 );
 
--- ============================================================
--- 2. TABLE : users
---    Utilisateurs de l'application (authentification)
--- ============================================================
 CREATE TABLE users (
     id_users   INT          AUTO_INCREMENT PRIMARY KEY,
     nom        VARCHAR(100) NOT NULL,
@@ -29,17 +19,11 @@ CREATE TABLE users (
     created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- ============================================================
--- 3. TABLE : region
--- ============================================================
 CREATE TABLE region (
     id_region   INT          AUTO_INCREMENT PRIMARY KEY,
     nom_region  VARCHAR(100) NOT NULL
 );
 
--- ============================================================
--- 4. TABLE : ville
--- ============================================================
 CREATE TABLE ville (
     id_ville   INT          AUTO_INCREMENT PRIMARY KEY,
     nom_ville  VARCHAR(100) NOT NULL,
@@ -48,19 +32,11 @@ CREATE TABLE ville (
         ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
--- ============================================================
--- 5. TABLE : type_besoin
---    Nature (riz, huile…), Matériaux (tôle, clou…), Argent
--- ============================================================
 CREATE TABLE type_besoin (
     id_type    INT         AUTO_INCREMENT PRIMARY KEY,
-    nom_type   VARCHAR(50) NOT NULL   -- 'Nature', 'Matériaux', 'Argent'
+    nom_type   VARCHAR(50) NOT NULL
 );
 
--- ============================================================
--- 6. TABLE : article
---    Produit/bien pouvant être besoin ou don
--- ============================================================
 CREATE TABLE article (
     id_article  INT          AUTO_INCREMENT PRIMARY KEY,
     nom_article VARCHAR(100) NOT NULL,
@@ -72,11 +48,6 @@ CREATE TABLE article (
         ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
--- ============================================================
--- 6bis. TABLE : prix_unitaire
---    Les besoins (Nature, Matériaux) ont un prix unitaire fixe.
---    1 article = 1 prix unitaire (ne change pas)
--- ============================================================
 CREATE TABLE prix_unitaire (
     id_prix_unitaire INT            AUTO_INCREMENT PRIMARY KEY,
     id_article       INT            NOT NULL,
@@ -87,33 +58,23 @@ CREATE TABLE prix_unitaire (
         ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
--- ============================================================
--- 7. TABLE : evenement
--- [AJOUT] Événements déclencheurs (cyclone, inondation, etc.)
---         Permet de lier besoins et dons à un contexte précis
--- ============================================================
 CREATE TABLE evenement (
     id_evenement  INT          AUTO_INCREMENT PRIMARY KEY,
-    nom_evenement VARCHAR(150) NOT NULL,         -- ex: "Cyclone Freddy – Mars 2025"
+    nom_evenement VARCHAR(150) NOT NULL,
     description   TEXT,
     date_debut    DATE         NOT NULL,
-    date_fin      DATE,                          -- NULL si toujours actif
-    id_region     INT,                           -- région principalement touchée
+    date_fin      DATE,
+    id_region     INT,
     created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (id_region) REFERENCES region(id_region)
         ON UPDATE CASCADE ON DELETE SET NULL
 );
 
--- ============================================================
--- 8. TABLE : besoin
---    Besoins saisis par ville (sans identification individuelle)
---    [CORRECTION] quantite_demandee doit être > 0 (CHECK)
--- ============================================================
 CREATE TABLE besoin (
     id_besoin           INT            AUTO_INCREMENT PRIMARY KEY,
     id_ville            INT            NOT NULL,
     id_article          INT            NOT NULL,
-    id_evenement        INT,                          -- lien optionnel à un événement
+    id_evenement        INT,
     quantite_demandee   DECIMAL(15,2)  NOT NULL CHECK (quantite_demandee > 0),
     date_saisie         DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     observations        TEXT,
@@ -125,21 +86,15 @@ CREATE TABLE besoin (
         ON UPDATE CASCADE ON DELETE SET NULL
 );
 
--- ============================================================
--- 9. TABLE : don
---    Dons collectés (en nature, matériaux ou argent)
---    [AJOUT] quantite_disponible calculée via TRIGGER (voir bas)
---    [CORRECTION] quantite_donnee doit être > 0
--- ============================================================
 CREATE TABLE don (
     id_don              INT            AUTO_INCREMENT PRIMARY KEY,
     id_article          INT            NOT NULL,
-    id_evenement        INT,                          -- don lié à un événement
+    id_evenement        INT,
     quantite_totale     DECIMAL(15,2)  NOT NULL CHECK (quantite_totale > 0),
     quantite_distribuee DECIMAL(15,2)  NOT NULL DEFAULT 0.00,
     date_reception      DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    donateur            VARCHAR(150),                 -- nom du donateur (optionnel)
-    source              VARCHAR(200),                 -- ONG, particulier, entreprise…
+    donateur            VARCHAR(150),
+    source              VARCHAR(200),
     observations        TEXT,
     CONSTRAINT chk_distribuee_lte_totale
         CHECK (quantite_distribuee <= quantite_totale),
@@ -149,18 +104,6 @@ CREATE TABLE don (
         ON UPDATE CASCADE ON DELETE SET NULL
 );
 
--- ============================================================
--- 9bis. TABLE : conversion_argent
---    Conversion d'un DON en ARGENT en articles (Nature/Matériaux)
---    via le prix unitaire (snapshot pour audit).
---
---    Exemple: don_argent=60 000 Ar, prix riz=4 500 Ar/kg
---      => montant_utilise=30 000 Ar, quantite_obtenue=6.66 kg
---
---    Cette table stocke la RELATION entre :
---      - un don en argent (id_don_argent)
---      - un article cible (id_article_cible)
--- ============================================================
 CREATE TABLE conversion_argent (
     id_conversion        INT            AUTO_INCREMENT PRIMARY KEY,
     id_don_argent        INT            NOT NULL,
@@ -176,13 +119,6 @@ CREATE TABLE conversion_argent (
         ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
--- ============================================================
--- 10. TABLE : attribution
---     [CLEF DU PROJET] Lie un DON à un BESOIN pour une VILLE
---     Règle de gestion : quantite_attribuee <=
---       (quantite_totale - quantite_distribuee) du don
---     => contrôlé par TRIGGER ci-dessous
--- ============================================================
 CREATE TABLE attribution (
     id_attribution      INT            AUTO_INCREMENT PRIMARY KEY,
     id_besoin           INT            NOT NULL,
@@ -196,77 +132,97 @@ CREATE TABLE attribution (
         ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
-
--- ============================================================
--- DONNÉES DE RÉFÉRENCE (INSERT initiaux)
--- ============================================================
-
--- Unités
-INSERT INTO unite (libelle, symbole) VALUES
-    ('Kilogramme',  'kg'),
-    ('Litre',       'L'),
-    ('Pièce',       'pcs'),
-    ('Ariary',      'Ar'),
-    ('Tonne',       't'),
-    ('Carton',      'ctn');
-
--- Types de besoin
-INSERT INTO type_besoin (nom_type) VALUES
-    ('Nature'),
-    ('Matériaux'),
-    ('Argent');
-
--- Articles de référence
-INSERT INTO article (nom_article, id_type, id_unite) VALUES
-    ('Riz',            1, 1),   -- Nature / kg
-    ('Huile',          1, 2),   -- Nature / L
-    ('Farine',         1, 1),   -- Nature / kg
-    ('Sucre',          1, 1),   -- Nature / kg
-    ('Tôle',           2, 3),   -- Matériaux / pcs
-    ('Clou',           2, 1),   -- Matériaux / kg
-    ('Bois de charpente', 2, 3),-- Matériaux / pcs
-    ('Aide financière',3, 4);   -- Argent / Ar
-
--- Prix unitaires (exemples à ajuster)
--- NB: uniquement pour Nature / Matériaux (les prix ne changent pas)
-INSERT INTO prix_unitaire (id_article, prix) VALUES
-    (1, 4500.00),  -- Riz / kg
-    (2, 12000.00), -- Huile / L
-    (3, 4000.00),  -- Farine / kg
-    (4, 5000.00),  -- Sucre / kg
-    (5, 30000.00), -- Tôle / pcs
-    (6, 15000.00), -- Clou / kg
-    (7, 80000.00); -- Bois de charpente / pcs
-
--- Utilisateur admin par défaut (mot de passe à hacher côté application)
-INSERT INTO users (nom, email, password, role) VALUES
-    ('Administrateur BNGRC', 'admin@bngrc.mg', 'HASHED_PASSWORD', 'admin');
-
--- ============================================================
--- RÉSUMÉ DES TABLES
--- ============================================================
-/*
-  unite         → Unités de mesure
-  users         → Authentification (admin / opérateur)
-  region        → Régions géographiques
-  ville         → Villes (liées à une région)
-  type_besoin   → Nature | Matériaux | Argent
-  article       → Articles (riz, tôle, argent…)
-  evenement  ★  → Événements (cyclone, inondation…) [AJOUTÉ]
-  besoin        → Besoins saisis par ville
-  don           → Dons reçus
-  attribution ★ → Liaison don ↔ besoin (règle de gestion)
-  [TRIGGERS]    → Contrôle stock + mise à jour automatique
-  [VUES]        → Dashboard + Stock dons
-*/
-
 INSERT INTO region (nom_region) VALUES
-    ('Analamanga'),       -- 1
-    ('Vakinankaratra'),   -- 2
-    ('Itasy'),            -- 3
-    ('Bongolava');
+('Atsinanana'),
+('Vatovavy'),
+('Atsimo Atsinanana'),
+('Diana'),
+('Menabe');
 
-    -- 1. Analamanga (Chef-lieu : Antananarivo)
 INSERT INTO ville (nom_ville, id_region) VALUES
-    ('Antananarivo',    1),
-    ('Ambohidratrimo',  1);
+('Toamasina', 1),
+('Mananjary', 2),
+('Farafangana', 3),
+('Nosy Be', 4),
+('Morondava', 5);
+
+INSERT INTO unite (libelle, symbole) VALUES
+('Kilogramme', 'kg'),
+('Litre', 'L'),
+('Unite', 'u'),
+('Ariary', 'Ar');
+
+INSERT INTO type_besoin (nom_type) VALUES
+('nature'),
+('materiel'),
+('argent');
+
+INSERT INTO article (nom_article, id_type, id_unite) VALUES
+('Riz', 1, 1),
+('Eau', 1, 2),
+('Huile', 1, 2),
+('Haricots', 1, 1),
+('Tôle', 2, 3),
+('Bâche', 2, 3),
+('Clous', 2, 1),
+('Bois', 2, 3),
+('groupe', 2, 3),
+('Argent', 3, 4);
+
+INSERT INTO prix_unitaire (id_article, prix) VALUES
+(1, 3000),
+(2, 1000),
+(3, 6000),
+(4, 4000),
+(5, 25000),
+(6, 15000),
+(7, 8000),
+(8, 10000),
+(9, 6750000),
+(10, 1);
+
+INSERT INTO besoin (id_ville, id_article, quantite_demandee, date_saisie) VALUES
+(1,1,800,'2026-02-16'),
+(1,2,1500,'2026-02-15'),
+(1,5,120,'2026-02-16'),
+(1,6,200,'2026-02-15'),
+(1,10,12000000,'2026-02-16'),
+(2,1,500,'2026-02-15'),
+(2,3,120,'2026-02-16'),
+(2,5,80,'2026-02-15'),
+(2,7,60,'2026-02-16'),
+(2,10,6000000,'2026-02-15'),
+(3,1,600,'2026-02-16'),
+(3,2,1000,'2026-02-15'),
+(3,6,150,'2026-02-16'),
+(3,8,100,'2026-02-15'),
+(3,10,8000000,'2026-02-16'),
+(4,1,300,'2026-02-15'),
+(4,4,200,'2026-02-16'),
+(4,5,40,'2026-02-15'),
+(4,7,30,'2026-02-16'),
+(4,10,4000000,'2026-02-15'),
+(5,1,700,'2026-02-16'),
+(5,2,1200,'2026-02-15'),
+(5,6,180,'2026-02-16'),
+(5,8,150,'2026-02-15'),
+(5,10,10000000,'2026-02-16'),
+(1,9,3,'2026-02-15');
+
+INSERT INTO don (id_article, quantite_totale, date_reception) VALUES
+(10,5000000,'2026-02-16'),
+(10,3000000,'2026-02-16'),
+(10,4000000,'2026-02-17'),
+(10,1500000,'2026-02-17'),
+(10,6000000,'2026-02-17'),
+(1,400,'2026-02-16'),
+(2,600,'2026-02-16'),
+(5,50,'2026-02-17'),
+(6,70,'2026-02-17'),
+(4,100,'2026-02-17'),
+(1,2000,'2026-02-18'),
+(5,300,'2026-02-18'),
+(2,5000,'2026-02-18'),
+(10,20000000,'2026-02-19'),
+(6,500,'2026-02-19'),
+(4,88,'2026-02-17');
