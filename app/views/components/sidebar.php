@@ -69,5 +69,12 @@
       </a>
     </li>
 
+    <li class="nav-item">
+      <a class="nav-link" href="<?= (isset($homeUrl) ? rtrim($homeUrl, '/') : '') ?>/recap">
+        <i class="bi bi-bar-chart-line" style="color:#0d6efd;"></i>
+        <span>Récapitulatif</span>
+      </a>
+    </li>
+
   </ul>
 </aside>

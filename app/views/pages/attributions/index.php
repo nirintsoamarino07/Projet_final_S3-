@@ -69,7 +69,13 @@
     <div class="col-lg-5">
       <div class="card">
         <div class="card-body">
-          <h5 class="card-title">Attribution</h5>
+          <div class="d-flex align-items-center justify-content-between">
+            <h5 class="card-title mb-0">Attribution</h5>
+            <button type="button" class="btn btn-outline-danger btn-sm" id="btn-reset-dispatch">
+              <i class="bi bi-arrow-counterclockwise"></i>
+              Réinitialiser dispatch
+            </button>
+          </div>
 
           <div id="attrib-alert" class="alert alert-danger d-none"></div>
           <div id="attrib-info" class="alert alert-info">Sélectionnez un besoin à gauche.</div>
@@ -135,6 +141,7 @@
   const alertBox = document.getElementById('attrib-alert');
   const infoBox = document.getElementById('attrib-info');
   const form = document.getElementById('attrib-form');
+  const resetBtn = document.getElementById('btn-reset-dispatch');
   const besoinLabel = document.getElementById('besoin-label');
   const idBesoinInput = document.getElementById('id_besoin');
   const modeStock = document.getElementById('mode_stock');
@@ -163,6 +170,31 @@
     alertBox.textContent = '';
     alertBox.classList.add('d-none');
   };
+
+  if (resetBtn) {
+    resetBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      clearError();
+      if (!confirm('Confirmer la réinitialisation du dispatch ?')) {
+        return;
+      }
+      try {
+        const res = await fetch(`${base}/attributions/reset-dispatch`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: ''
+        });
+        const data = await res.json();
+        if (!res.ok || !data || data.success !== true) {
+          showError((data && data.message) ? data.message : 'Erreur lors de la réinitialisation.');
+          return;
+        }
+        window.location.reload();
+      } catch (err) {
+        showError('Erreur réseau / serveur.');
+      }
+    });
+  }
 
   const resetDonTotal = () => {
     donTotal.textContent = '';

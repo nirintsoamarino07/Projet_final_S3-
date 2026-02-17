@@ -143,6 +143,31 @@ class AttributionModel
         return isset($row->prix) ? (float) $row->prix : null;
     }
 
+    public function resetDispatch(): void
+    {
+        $db = $this->app->db();
+
+        try {
+            $db->beginTransaction();
+
+            $db->runQuery('DELETE FROM attribution');
+            $db->runQuery('DELETE FROM conversion_argent');
+
+            $db->runQuery(
+                'DELETE FROM don WHERE source IN ("Conversion argent", "Vente matériel")'
+            );
+
+            $db->runQuery('UPDATE don SET quantite_distribuee = 0');
+
+            $db->commit();
+        } catch (Exception $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            throw $e;
+        }
+    }
+
     public function createAttributionFifo(int $idBesoin, float $quantite): void
     {
         if ($quantite <= 0) {
@@ -343,13 +368,14 @@ class AttributionModel
                 throw new Exception('La quantité dépasse le reste à couvrir pour ce besoin.');
             }
 
-            $don = $db->fetchRow(
+            $dons = $db->fetchAll(
                 'SELECT id_don, id_article, quantite_totale, quantite_distribuee
                  FROM don
                  WHERE id_don = ?
-                 FOR UPDATE',
+                 LIMIT 1 FOR UPDATE',
                 [ $idDon ]
             );
+            $don = $dons[0] ?? null;
 
             if (empty($don) || empty($don->id_don)) {
                 throw new Exception('Don introuvable.');

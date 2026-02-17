@@ -1,3 +1,5 @@
+
+
 CREATE DATABASE IF NOT EXISTS ETU4084_4322_4088
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
@@ -27,13 +29,17 @@ CREATE TABLE users (
     created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-
+-- ============================================================
+-- 3. TABLE : region
+-- ============================================================
 CREATE TABLE region (
     id_region   INT          AUTO_INCREMENT PRIMARY KEY,
     nom_region  VARCHAR(100) NOT NULL
 );
 
-
+-- ============================================================
+-- 4. TABLE : ville
+-- ============================================================
 CREATE TABLE ville (
     id_ville   INT          AUTO_INCREMENT PRIMARY KEY,
     nom_ville  VARCHAR(100) NOT NULL,
@@ -42,13 +48,19 @@ CREATE TABLE ville (
         ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
-
+-- ============================================================
+-- 5. TABLE : type_besoin
+--    Nature (riz, huile…), Matériaux (tôle, clou…), Argent
+-- ============================================================
 CREATE TABLE type_besoin (
     id_type    INT         AUTO_INCREMENT PRIMARY KEY,
     nom_type   VARCHAR(50) NOT NULL   -- 'Nature', 'Matériaux', 'Argent'
 );
 
-
+-- ============================================================
+-- 6. TABLE : article
+--    Produit/bien pouvant être besoin ou don
+-- ============================================================
 CREATE TABLE article (
     id_article  INT          AUTO_INCREMENT PRIMARY KEY,
     nom_article VARCHAR(100) NOT NULL,
@@ -60,6 +72,11 @@ CREATE TABLE article (
         ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
+-- ============================================================
+-- 6bis. TABLE : prix_unitaire
+--    Les besoins (Nature, Matériaux) ont un prix unitaire fixe.
+--    1 article = 1 prix unitaire (ne change pas)
+-- ============================================================
 CREATE TABLE prix_unitaire (
     id_prix_unitaire INT            AUTO_INCREMENT PRIMARY KEY,
     id_article       INT            NOT NULL,
@@ -70,7 +87,11 @@ CREATE TABLE prix_unitaire (
         ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
-
+-- ============================================================
+-- 7. TABLE : evenement
+-- [AJOUT] Événements déclencheurs (cyclone, inondation, etc.)
+--         Permet de lier besoins et dons à un contexte précis
+-- ============================================================
 CREATE TABLE evenement (
     id_evenement  INT          AUTO_INCREMENT PRIMARY KEY,
     nom_evenement VARCHAR(150) NOT NULL,         -- ex: "Cyclone Freddy – Mars 2025"
@@ -128,7 +149,18 @@ CREATE TABLE don (
         ON UPDATE CASCADE ON DELETE SET NULL
 );
 
-
+-- ============================================================
+-- 9bis. TABLE : conversion_argent
+--    Conversion d'un DON en ARGENT en articles (Nature/Matériaux)
+--    via le prix unitaire (snapshot pour audit).
+--
+--    Exemple: don_argent=60 000 Ar, prix riz=4 500 Ar/kg
+--      => montant_utilise=30 000 Ar, quantite_obtenue=6.66 kg
+--
+--    Cette table stocke la RELATION entre :
+--      - un don en argent (id_don_argent)
+--      - un article cible (id_article_cible)
+-- ============================================================
 CREATE TABLE conversion_argent (
     id_conversion        INT            AUTO_INCREMENT PRIMARY KEY,
     id_don_argent        INT            NOT NULL,
@@ -144,6 +176,13 @@ CREATE TABLE conversion_argent (
         ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
+-- ============================================================
+-- 10. TABLE : attribution
+--     [CLEF DU PROJET] Lie un DON à un BESOIN pour une VILLE
+--     Règle de gestion : quantite_attribuee <=
+--       (quantite_totale - quantite_distribuee) du don
+--     => contrôlé par TRIGGER ci-dessous
+-- ============================================================
 CREATE TABLE attribution (
     id_attribution      INT            AUTO_INCREMENT PRIMARY KEY,
     id_besoin           INT            NOT NULL,
@@ -158,6 +197,11 @@ CREATE TABLE attribution (
 );
 
 
+-- ============================================================
+-- DONNÉES DE RÉFÉRENCE (INSERT initiaux)
+-- ============================================================
+
+-- Unités
 INSERT INTO unite (libelle, symbole) VALUES
     ('Kilogramme',  'kg'),
     ('Litre',       'L'),
@@ -166,12 +210,13 @@ INSERT INTO unite (libelle, symbole) VALUES
     ('Tonne',       't'),
     ('Carton',      'ctn');
 
-
+-- Types de besoin
 INSERT INTO type_besoin (nom_type) VALUES
     ('Nature'),
     ('Matériaux'),
     ('Argent');
 
+-- Articles de référence
 INSERT INTO article (nom_article, id_type, id_unite) VALUES
     ('Riz',            1, 1),   -- Nature / kg
     ('Huile',          1, 2),   -- Nature / L

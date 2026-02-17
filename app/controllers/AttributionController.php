@@ -107,4 +107,17 @@ class AttributionController
             ], 400);
         }
     }
+
+    public function resetDispatch(): void
+    {
+        try {
+            $this->attributionModel->resetDispatch();
+            $this->app->json([ 'success' => true ]);
+        } catch (Exception $e) {
+            $this->app->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 400);
+        }
+    }
 }

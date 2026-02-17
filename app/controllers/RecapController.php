@@ -4,46 +4,38 @@ declare(strict_types=1);
 
 namespace app\controllers;
 
-use app\models\DashboardModel;
+use app\models\RecapModel;
 use flight\Engine;
 
 class RecapController
 {
     protected Engine $app;
-    protected DashboardModel $dashboardModel;
+    protected RecapModel $recapModel;
 
     public function __construct(Engine $app)
     {
         $this->app = $app;
-        $this->dashboardModel = new DashboardModel($app);
+        $this->recapModel = new RecapModel($app);
     }
 
-    /**
-     * Page de récapitulation (/recap)
-     */
     public function index(): void
     {
-        $recap = $this->dashboardModel->getRecapMontants();
-
         $this->app->render('pages/recap/index', [
             'title' => 'Récapitulatif',
             'headerTitle' => 'Récapitulatif',
-            'pageTitle' => 'Récapitulatif des montants',
-            'recap' => $recap,
+            'pageTitle' => 'Récapitulatif',
         ], 'content');
 
         $this->app->render('layouts/base');
     }
 
-    /**
-     * Endpoint Ajax pour rafraîchir les données
-     */
-    public function refresh(): void
+    public function stats(): void
     {
-        $recap = $this->dashboardModel->getRecapMontants();
+        $stats = $this->recapModel->getMontantStats();
+
         $this->app->json([
             'success' => true,
-            'data' => $recap,
+            'stats' => $stats,
         ]);
     }
 }

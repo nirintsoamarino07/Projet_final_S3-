@@ -108,4 +108,35 @@ class DonController
 
         $this->app->redirect('/dons');
     }
+
+    public function vendreSubmit(): void
+    {
+        $idDon = (int) ($this->app->request()->data->id_don ?? 0);
+        $quantiteRaw = $this->app->request()->data->quantite ?? null;
+        $reductionRaw = $this->app->request()->data->reduction_percent ?? null;
+
+        $quantite = is_numeric($quantiteRaw) ? (float) $quantiteRaw : 0.0;
+        $reduction = is_numeric($reductionRaw) ? (float) $reductionRaw : 0.0;
+
+        try {
+            if ($idDon <= 0) {
+                throw new \Exception('Don introuvable.');
+            }
+            if ($quantite <= 0) {
+                throw new \Exception('Quantité invalide.');
+            }
+
+            $idDonArgent = $this->donModel->vendreMaterielEnArgent($idDon, $quantite, $reduction);
+
+            $this->app->json([
+                'success' => true,
+                'id_don_argent' => $idDonArgent,
+            ]);
+        } catch (\Exception $e) {
+            $this->app->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 400);
+        }
+    }
 }
